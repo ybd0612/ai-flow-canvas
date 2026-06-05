@@ -2,7 +2,7 @@
 
 ## 概述
 
-wxhb 的 UI 组件位于 `src/components/`，负责侧边栏、任务管理、设置和提示横幅。
+wxhb 的 UI 组件位于 `src/components/`，负责侧边栏、任务管理、设置和提示横幅。PropertiesPanel 位于 `src/canvas/panels/`。
 
 ## 文件位置
 
@@ -12,6 +12,9 @@ src/components/
 ├── TaskManager.tsx      # 任务管理器
 ├── SettingsDialog.tsx   # 设置对话框
 └── ApiKeyBanner.tsx     # API Key 提示横幅
+
+src/canvas/panels/
+└── PropertiesPanel.tsx  # 右侧属性编辑面板
 ```
 
 ---
@@ -111,6 +114,102 @@ CanvasWorkspace 的 `onDrop` 读取此数据创建节点。
 1. 捕获当前快照并保存
 2. 从 history[index] 恢复 canvasData
 3. 设置 activeTaskId
+
+---
+
+## PropertiesPanel — 右侧属性面板
+
+### 概述
+
+选中节点时在画布右侧显示，提供节点的完整属性编辑、执行日志查看和输出预览。
+
+### 文件位置
+
+`src/canvas/panels/PropertiesPanel.tsx`
+
+### 显示条件
+
+- 选中节点时显示（`selectedNodeId !== null`）
+- 点击画布空白处或关闭按钮隐藏
+
+### 布局
+
+```
+┌──────────────────────────┐
+│ 节点标签    ▶ ↻ ✕        │ ← Header（sticky）
+├──────────────────────────┤
+│ LABEL                    │
+│ [节点标签输入框]           │
+├──────────────────────────┤
+│ 节点类型特有字段           │ ← 按节点类型动态渲染
+│ （见下方各类型详情）       │
+├──────────────────────────┤
+│ 日志 (N)                 │ ← 可折叠日志区
+│ ┌──────────────────────┐ │
+│ │ 12:30:01 — 执行开始   │ │
+│ │ 12:30:03 — 生成成功   │ │
+│ └──────────────────────┘ │
+└──────────────────────────┘
+```
+
+### Header 操作
+
+| 按钮 | 功能 |
+|------|------|
+| ▶ Play | 运行此节点（`run({ startNodeId })`） |
+| ↻ RotateCcw | 重置所有节点执行状态 |
+| ✕ X | 关闭面板 |
+
+### 节点类型特有字段
+
+#### TextNodeFields
+
+- Model 下拉（从 `MODEL_REGISTRY.text` 读取）
+- Prompt textarea
+- System Prompt textarea
+- Temperature 数字输入
+- Max Tokens 数字输入
+- 文本输出预览区（显示 `output` 字段）
+
+#### ImageNodeFields
+
+- Model 下拉（从 `MODEL_REGISTRY.image` 读取）
+- Prompt textarea
+- Negative Prompt textarea（当前数据类型未定义此字段，预留 UI）
+- Size 下拉
+- Guidance Scale 数字输入（当前数据类型未定义此字段，预留 UI）
+- Seed 数字输入（当前数据类型未定义此字段，预留 UI）
+- 输入图片 URL / 已连接图片预览
+- 输出图片预览
+
+#### VideoNodeFields
+
+- Prompt textarea
+- System Prompt textarea
+- 分辨率 W × H
+- FPS / Frames
+- Mode 选择（normal / keyframe）
+- Seed 数字输入
+- 任务 ID / 进度显示
+- 视频输出播放器
+
+#### PromptNodeFields
+
+- System Prompt textarea
+- Output Modality 下拉（text / image / video）
+
+#### UploadNodeFields
+
+- 文件信息（名称、类型）
+- 图片预览
+- 无图片时提示"暂无图片"
+
+### 日志区
+
+- 可折叠（details/summary）
+- 显示日志条数
+- 每条日志：时间戳 + 消息
+- 最大高度 160px，溢出滚动
 
 ---
 

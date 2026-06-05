@@ -4,11 +4,14 @@
 
 wxhb 通过抽象 `ModelProvider` 接口解耦 AI 模型调用，当前唯一实现为 `AgnesAdapter`。
 
+> **重要架构说明**：当前 `useWorkflowRunner` 中有独立的 REST 调用函数（`callTextAPI` / `callImageAPI` / `callVideoCreateAPI` / `callVideoPollAPI`），直接通过 `fetch` 调用 Agnes API。`AgnesAdapter` 虽然实现了完整的 `ModelProvider` 接口，但 runner 并未调用它。两套实现功能重复，未来应统一。
+
 ## 文件位置
 
 - `src/providers/types.ts` — 抽象接口和类型定义
 - `src/providers/agnes/AgnesAdapter.ts` — Agnes AI 适配器实现
 - `src/canvas/types.ts` — `MODEL_REGISTRY` 模型注册表
+- `src/canvas/hooks/useWorkflowRunner.ts` — 实际 REST 调用层（独立于 Adapter）
 
 ## 类型系统
 
@@ -81,12 +84,14 @@ interface ModelProvider {
   prompt: string;
   inputImageUrl?: string;  // 图生图
   size?: string;           // 默认 "1024x1024"
-  quality?: string;
+  quality?: string;        // 当前 runner 未传入此参数
   responseFormat?: "url" | "b64_json";
   n?: number;
   extraBody?: Record<string, unknown>;
 }
 ```
+
+> **注意**：`quality` 参数在 `ImageParams` 接口中定义，但 `useWorkflowRunner` 的 `callImageAPI()` 实际未使用它。`AgnesAdapter.generateImage()` 也未使用。当前图像 API 始终使用默认质量。
 
 ### VideoParams
 
@@ -106,25 +111,14 @@ interface ModelProvider {
 }
 ```
 
-## AgnesAdapter 实现
+## 实际 REST 调用层（useWorkflowRunner 内部）
 
-### API 端点
+工作流引擎直接实现了 4 个 REST 函数，是实际的 API 调用路径：
 
-| 功能 | 方法 | 端点 |
-|------|------|------|
-| 模型发现 | GET | `{baseUrl}/models` |
-| 文本生成 | POST | `{baseUrl}/chat/completions` |
-| 图像生成 | POST | `{baseUrl}/images/generations` |
-| 创建视频任务 | POST | `{baseUrl}/videos` |
-| 轮询视频任务 | GET | `{baseUrl}/videos/{taskId}` |
+### callTextAPI()
 
-### 认证
+POST `{baseUrl}/chat/completions`
 
-所有请求通过 `Authorization: Bearer {apiKey}` 头认证。
-
-### 文本生成
-
-标准 OpenAI 兼容格式：
 ```json
 {
   "model": "agnes-2.0-flash",
@@ -138,7 +132,9 @@ interface ModelProvider {
 }
 ```
 
-### 图像生成
+### callImageAPI()
+
+POST `{baseUrl}/images/generations`
 
 ```json
 {
@@ -146,14 +142,16 @@ interface ModelProvider {
   "prompt": "...",
   "size": "1024x1024",
   "return_base64": true,
-  "image": ["input_image_url"],  // 图生图
+  "image": ["input_image_url"],
   "extra_body": {}
 }
 ```
 
-注意：始终使用 `return_base64: true`，不使用 `response_format`。
+注意：始终使用 `return_base64: true`。当返回 `b64_json` 时，自动拼接为 `data:image/png;base64,` 前缀的 data URL。
 
-### 视频任务创建
+### callVideoCreateAPI()
+
+POST `{baseUrl}/videos`
 
 ```json
 {
@@ -163,8 +161,7 @@ interface ModelProvider {
   "frame_rate": 24,
   "width": 768,
   "height": 1152,
-  "image": "single_image_url",  // 单图模式
-  // 或
+  "image": "single_image_url",
   "extra_body": {
     "image": ["url1", "url2"],
     "mode": "keyframes"
@@ -172,7 +169,11 @@ interface ModelProvider {
 }
 ```
 
-### 视频状态映射
+### callVideoPollAPI()
+
+GET `{baseUrl}/videos/{taskId}`
+
+状态映射：
 
 | API 返回 | 内部状态 |
 |----------|----------|
@@ -180,6 +181,32 @@ interface ModelProvider {
 | processing, running | processing |
 | completed, succeeded | completed |
 | failed, cancelled | failed |
+
+## AgnesAdapter 实现
+
+`AgnesAdapter` 实现了 `ModelProvider` 接口的全部 5 个方法，逻辑与 runner 内部的 REST 函数基本一致。主要差异：
+
+| 特性 | runner 内部函数 | AgnesAdapter |
+|------|----------------|-------------|
+| 调用者 | useWorkflowRunner 直接调用 | 未被调用（待重构） |
+| b64_json 处理 | 拼接 data URL 前缀 | 返回原始值 |
+| 模型发现 | 无 | `discover()` 方法 |
+| 错误消息前缀 | `Text API` / `Image API` | `Text API error` / `Image API error` |
+
+### 认证
+
+所有请求通过 `Authorization: Bearer {apiKey}` 头认证。
+
+## ProviderConfig 接口冲突
+
+项目中存在两个同名但不同的 `ProviderConfig`：
+
+| 位置 | 字段 | 用途 |
+|------|------|------|
+| `providers/types.ts` | `apiKey`, `baseUrl`, `modelOverrides?` | 理论上的完整配置 |
+| `stores/settingsStore.ts` | `apiKey`, `baseUrl` | 实际存储的配置 |
+
+`settingsStore` 中的版本是实际使用的，`providers/types.ts` 中的 `modelOverrides` 字段当前未被任何代码使用。
 
 ## 模型注册表
 
@@ -213,5 +240,5 @@ const MODEL_REGISTRY: Record<Modality, ModelEntry[]> = {
 ### 接入新 Provider
 
 1. 实现 `ModelProvider` 接口
-2. 在 `useWorkflowRunner.ts` 中替换 AgnesAdapter 调用
-3. 或通过工厂模式动态选择 provider
+2. 重构 `useWorkflowRunner` 中的 `callTextAPI` / `callImageAPI` / `callVideoCreateAPI` / `callVideoPollAPI` 为调用 adapter 方法
+3. 或在 runner 中注入 provider 实例
