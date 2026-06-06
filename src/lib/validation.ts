@@ -71,7 +71,7 @@ export function sanitizeTaskName(value: string): string {
 
 /* ── Prompt textarea ─────────────────────────────────────────────────────── */
 
-const PROMPT_MAX_LENGTH = 10000;
+const PROMPT_MAX_LENGTH = 256 * 1024; // 256K chars as per API docs
 
 export function sanitizePrompt(value: string): string {
   return sanitizeRichText(value).slice(0, PROMPT_MAX_LENGTH);
