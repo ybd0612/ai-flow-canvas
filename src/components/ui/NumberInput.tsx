@@ -52,51 +52,17 @@ export function NumberInput({ value, onChange, min, max, className, ...rest }: N
     [],
   );
 
-  // Single-step increment/decrement — no auto-repeat
-  const stepOnce = useCallback(
-    (dir: 1 | -1) => {
-      const lo = min != null ? Number(min) : -Infinity;
-      const hi = max != null ? Number(max) : Infinity;
-      const current = parseFloat(localValue) || 0;
-      const clamped = clampNumber(current + dir, lo, hi);
-      setLocalValue(String(clamped));
-      committedRef.current = clamped;
-      onChange(clamped);
-    },
-    [localValue, onChange, min, max],
-  );
-
   return (
-    <div className="relative flex items-center">
-      <input
-        type="number"
-        value={localValue}
-        onChange={(e) => setLocalValue(e.target.value)}
-        onBlur={commit}
-        onKeyDown={handleKeyDown}
-        min={min}
-        max={max}
-        className={className + " pr-6"}
-        {...rest}
-      />
-      <div className="absolute right-0.5 top-0 bottom-0 flex flex-col items-center justify-center">
-        <button
-          type="button"
-          tabIndex={-1}
-          onMouseDown={(e) => { e.preventDefault(); stepOnce(1); }}
-          className="flex h-3 w-4 items-center justify-center text-[9px] text-slate-400 hover:text-slate-200"
-        >
-          ▲
-        </button>
-        <button
-          type="button"
-          tabIndex={-1}
-          onMouseDown={(e) => { e.preventDefault(); stepOnce(-1); }}
-          className="flex h-3 w-4 items-center justify-center text-[9px] text-slate-400 hover:text-slate-200"
-        >
-          ▼
-        </button>
-      </div>
-    </div>
+    <input
+      type="number"
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={handleKeyDown}
+      min={min}
+      max={max}
+      className={className}
+      {...rest}
+    />
   );
 }
