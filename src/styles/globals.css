@@ -29,6 +29,12 @@ body {
 }
 
 
+/* ── Canvas dark background ──────────────────────────────────────────── */
+
+.react-flow {
+  background-color: #020617 !important;
+}
+
 /* ── Controls toolbar contrast on dark canvas ──────────────────────────────── */
 .react-flow__controls .react-flow__controls-button,
 .controls .react-flow__controls-button {
