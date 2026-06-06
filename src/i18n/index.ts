@@ -41,6 +41,7 @@ const zh = {
 
   // Canvas
   "canvas.runWorkflow": "▶ 运行工作流",
+  "canvas.retryFailed": "重试失败节点",
 
   // Settings
   "settings.title": "设置",
@@ -215,6 +216,7 @@ const en = {
 
   // Canvas
   "canvas.runWorkflow": "▶ Run Workflow",
+  "canvas.retryFailed": "Retry Failed",
 
   // Settings
   "settings.title": "Settings",

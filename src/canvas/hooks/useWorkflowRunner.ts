@@ -1,4 +1,4 @@
-// ────────────────────────────────────────────────────────────────────────────
+﻿// ────────────────────────────────────────────────────────────────────────────
 // src/canvas/hooks/useWorkflowRunner.ts
 // Topological workflow execution engine with cycle detection,
 // partial (downstream-only) execution, and circuit-breaker error propagation.
@@ -619,7 +619,47 @@ export function useWorkflowRunner() {
     cancelRef.current = null;
   }, []);
 
-  return { run, cancel };
+  const retryFailed = useCallback(
+    async (opts: Omit<WorkflowRunOptions, "signal"> = {}) => {
+      const store = useCanvasStore.getState();
+      const failedNodes = store.nodes.filter((n) => {
+        const d = n.data as unknown as AnyNodeData;
+        return d.executionStatus === "failed";
+      });
+
+      if (failedNodes.length === 0) return { success: true, executedNodeIds: [], failedNodeId: undefined, error: undefined };
+
+      // Collect all failed node ids + their downstream
+      const toRetry = new Set<string>();
+      for (const n of failedNodes) {
+        toRetry.add(n.id);
+        for (const ds of findDownstream(n.id, store.edges)) {
+          toRetry.add(ds);
+        }
+      }
+
+      // Reset failed and downstream nodes to idle
+      store.cascadeNodeStates(
+        [...toRetry].map((id) => ({ nodeId: id, status: "idle" as const })),
+      );
+
+      // Re-run from each original failed node
+      cancelRef.current?.abort();
+      const controller = new AbortController();
+      cancelRef.current = controller;
+
+      let lastResult: { success: boolean; executedNodeIds: string[]; failedNodeId?: string; error?: string } | undefined;
+      for (const n of failedNodes) {
+        lastResult = await runWorkflow({ ...opts, startNodeId: n.id, signal: controller.signal });
+        if (!lastResult.success) break;
+      }
+
+      return lastResult ?? { success: true, executedNodeIds: [], failedNodeId: undefined, error: undefined };
+    },
+    [runWorkflow],
+  );
+
+  return { run, cancel, retryFailed };
 }
 
 

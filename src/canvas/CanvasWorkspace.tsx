@@ -291,7 +291,15 @@ function CanvasInner() {
   );
 
   /* ── Workflow runner ──────────────────────────────────────────────────── */
-  const { run } = useWorkflowRunner();
+  const { run, retryFailed } = useWorkflowRunner();
+
+  const hasFailedNodes = nodes.some((n) => (n.data as Record<string, unknown>).executionStatus === "failed");
+
+  const handleRetryFailed = useCallback(async () => {
+    setStoreNodes(nodes);
+    setStoreEdges(edges);
+    await retryFailed();
+  }, [retryFailed, nodes, edges, setStoreNodes, setStoreEdges]);
 
   const handleRunAll = useCallback(async () => {
     setStoreNodes(nodes);
@@ -367,6 +375,14 @@ function CanvasInner() {
         >
           {t("canvas.runWorkflow")}
         </button>
+        {hasFailedNodes && (
+          <button
+            onClick={handleRetryFailed}
+            className="flex items-center gap-1.5 rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-amber-500 active:scale-95"
+          >
+            {t("canvas.retryFailed")}
+          </button>
+        )}
       </div>
 
       {/* Right-side properties panel */}
