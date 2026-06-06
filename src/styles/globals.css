@@ -46,6 +46,17 @@ body {
   @apply !rounded-xl;
 }
 
+/* ── Hide native number-input spinners (custom buttons replace them) ──── */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
