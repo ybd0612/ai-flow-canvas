@@ -46,9 +46,9 @@ export function Sidebar() {
       {/* Logo */}
       <div className="border-b border-slate-800 px-4 py-3">
         <h1 className="text-sm font-bold text-slate-100">
-          <span className="text-emerald-400">AI</span> Canvas
+          {t("sidebar.logoTitle")}
         </h1>
-        <p className="text-xs text-slate-500">Infinite Canvas Creator</p>
+        <p className="text-xs text-slate-500">{t("sidebar.logoSubtitle")}</p>
       </div>
 
       {/* Node palette */}

@@ -13,6 +13,8 @@ const zh = {
   "sidebar.settings": "设置",
   "sidebar.clearCanvas": "清空画布",
   "sidebar.clearConfirm": "确定清空所有节点和连线？",
+  "sidebar.logoTitle": "AI 画布",
+  "sidebar.logoSubtitle": "无限画布创作工作台",
 
   // Palette
   "palette.prompt": "提示词",
@@ -189,6 +191,8 @@ const en = {
   "sidebar.settings": "Settings",
   "sidebar.clearCanvas": "Clear Canvas",
   "sidebar.clearConfirm": "Clear all nodes and edges?",
+  "sidebar.logoTitle": "AI Canvas",
+  "sidebar.logoSubtitle": "Infinite Canvas Creator",
 
   // Palette
   "palette.prompt": "Prompt",
