@@ -1,4 +1,4 @@
-﻿import { memo, useState } from "react";
+import { memo, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { ImageIcon, Link, Unlink } from "lucide-react";
 import { useCanvasStore } from "@/stores/canvasStore";
@@ -8,6 +8,7 @@ import { NodeShell } from "./NodeShell"
 import { useT } from '@/i18n';;
 import { sanitizePrompt, isValidUrl } from "@/lib/validation";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
+import { Lightbox } from "@/components/ui/Lightbox";
 
 const SIZE_OPTIONS = ["512x512", "768x768", "1024x1024", "1024x1792", "1792x1024"];
 
@@ -129,11 +130,13 @@ function ImageNodeInner({ id, data }: NodeProps) {
       {d.outputUrl ? (
         <div className="space-y-1">
           <span className="text-xs text-slate-500">{t("image.output")}</span>
+          <Lightbox src={d.outputUrl} alt="Generated">
           <img
             src={d.outputUrl}
             alt="Generated"
             className="max-h-40 w-full rounded-md border border-slate-700 object-contain"
           />
+          </Lightbox>
         </div>
       ) : d.executionStatus === "pending" ? (
         <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-slate-700">
