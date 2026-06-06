@@ -260,7 +260,7 @@ function VideoNodeFields({ nodeId, data }: { nodeId: string; data: VideoNodeData
       </Field>
       <Field label={t("panel.resolution")} hint={t("hint.resolution")}>
         <select
-          value={data.size}
+          value={String(data.size ?? "")}
           onChange={(e) => updateNodeData(nodeId, { size: e.target.value })}
           className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:border-amber-500 focus:outline-none"
         >
