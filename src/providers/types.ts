@@ -64,6 +64,7 @@ export interface ImageParams {
 export interface VideoParams {
   model: string;
   prompt: string;
+  negativePrompt?: string;
   /** Single reference image (image-to-video). */
   imageUrl?: string;
   /** Multiple reference images (multi-image / keyframe). */

@@ -40,6 +40,16 @@ function VideoNodeInner({ id, data }: NodeProps) {
         rows={3}
         className="w-full resize-none rounded-md border border-slate-700 bg-slate-800 p-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
       />
+      {/* Negative prompt */}
+      <textarea
+        value={String(d.negativePrompt ?? "")}
+        onChange={(e) =>
+          updateNodeData(id, { negativePrompt: e.target.value } as Partial<VideoNodeData>)
+        }
+        placeholder={t("panel.negativePlaceholder")}
+        rows={2}
+        className="w-full resize-none rounded-md border border-slate-700/60 bg-slate-800/80 p-2 text-xs text-slate-400 placeholder:text-slate-600 focus:border-amber-500 focus:outline-none"
+      />
       {/* Params row */}
       <div className="flex items-center gap-2">
         <label className="text-xs text-slate-500">{t("video.width")} <HelpTooltip>{t("hint.resolution")}</HelpTooltip></label>

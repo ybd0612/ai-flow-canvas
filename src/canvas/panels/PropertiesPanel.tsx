@@ -285,6 +285,15 @@ function VideoNodeFields({ nodeId, data }: { nodeId: string; data: VideoNodeData
           <span className="text-xs text-slate-500">{t("panel.frames")}</span>
         </div>
       </Field>
+      <Field label={t("panel.negativePrompt")}>
+        <textarea
+          value={String(data.negativePrompt ?? "")}
+          onChange={(e) => updateNodeData(nodeId, { negativePrompt: e.target.value })}
+          placeholder={t("panel.negativePlaceholder")}
+          rows={3}
+          className="w-full resize-none rounded-md border border-slate-700 bg-slate-800 p-2 text-xs text-slate-100 placeholder:text-slate-600 focus:border-amber-500 focus:outline-none"
+        />
+      </Field>
       <Field label={t("panel.seed")} hint={t("hint.seedVideo")}>
         <NumberInput
           min={0}
