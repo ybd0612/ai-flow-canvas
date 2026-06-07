@@ -1,4 +1,4 @@
-﻿// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // src/i18n/index.ts
 // Lightweight i18n system — no external deps, Zustand-driven language switch.
 // ────────────────────────────────────────────────────────────────────────────
@@ -197,6 +197,7 @@ const zh = {
   "log.skippedUpstreamFailure": "已跳过 — 上游失败。",
   "log.generatedChars": "生成了 {count} 个字符。",
   "log.imageGeneratedSuccess": "图像生成成功。",
+  "log.imageProgress": "生成第 {current}/{total} 张...",
   "log.videoTaskCreated": "视频任务已创建: {taskId}",
   "log.videoProgress": "进度: {progress}% — {status}",
   "log.videoCompleted": "视频生成完成。",
@@ -393,6 +394,7 @@ const en = {
   "log.skippedUpstreamFailure": "Skipped — upstream failure.",
   "log.generatedChars": "Generated {count} chars.",
   "log.imageGeneratedSuccess": "Image generated successfully.",
+  "log.imageProgress": "Generating {current}/{total}...",
   "log.videoTaskCreated": "Video task created: {taskId}",
   "log.videoProgress": "Progress: {progress}% — {status}",
   "log.videoCompleted": "Video completed.",

@@ -1,4 +1,4 @@
-﻿// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // src/canvas/CanvasWorkspace.tsx
 // The main infinite canvas — wires up React Flow with custom nodes/edges,
 // connection validation, drag-to-add, and workflow execution.

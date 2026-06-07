@@ -1,4 +1,4 @@
-﻿// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // src/canvas/hooks/useWorkflowRunner.ts
 // Topological workflow execution engine with cycle detection,
 // partial (downstream-only) execution, and circuit-breaker error propagation.

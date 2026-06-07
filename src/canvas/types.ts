@@ -1,4 +1,4 @@
-﻿// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // src/canvas/types.ts
 // React Flow node data types — one per node kind.
 // Every node carries its own execution state and error log.

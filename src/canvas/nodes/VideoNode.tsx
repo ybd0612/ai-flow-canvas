@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Film, Loader2 } from "lucide-react";
 import { useCanvasStore } from "@/stores/canvasStore";
