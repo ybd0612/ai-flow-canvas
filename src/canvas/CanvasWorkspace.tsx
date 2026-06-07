@@ -283,6 +283,8 @@ function CanvasInner() {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if ((e as unknown as KeyboardEvent).isComposing) return; // Skip during IME composition
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement).isContentEditable) return;
       if (e.key === "Backspace" || e.key === "Delete") {
         const selected = nodes.filter((n) => n.selected);
         const selectedEdges = edges.filter((ed) => ed.selected);
