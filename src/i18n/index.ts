@@ -69,6 +69,7 @@ const zh = {
   "settings.connectionOkPreview": "连接正常，响应预览：",
   "settings.invalidUrl": "请输入有效的 URL 地址",
   "settings.storageNote": "密钥存储在浏览器本地，仅在向配置的地址发起 API 请求时才会发送。",
+  "settings.github.desc": "开源项目，欢迎 Star ⭐ 和 PR",
   "settings.language": "语言",
 
   // Panel
@@ -270,6 +271,7 @@ const en = {
   "settings.connectionOkPreview": "Connection OK. Response preview: ",
   "settings.invalidUrl": "Please enter a valid URL",
   "settings.storageNote": "Keys are stored in your browser. They never leave your device except when making API calls to the configured base URL.",
+  "settings.github.desc": "Open source project — Star ⭐ and PRs welcome",
   "settings.language": "Language",
 
   // Panel
