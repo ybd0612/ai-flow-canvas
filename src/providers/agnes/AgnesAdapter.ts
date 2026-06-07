@@ -136,6 +136,7 @@ export class AgnesAdapter implements ModelProvider {
     }
 
     body.extra_body = {
+      response_format: "url",
       ...(params.extraBody ?? {}),
     };
 
@@ -242,7 +243,7 @@ export class AgnesAdapter implements ModelProvider {
       case "queued":
         status = "pending";
         break;
-      case "processing":
+      case "processing": case "running": case "in_progress": status = "processing"; break;
       case "running":
         status = "processing";
         break;

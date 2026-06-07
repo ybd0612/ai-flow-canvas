@@ -263,6 +263,7 @@ function VideoNodeFields({ nodeId, data }: { nodeId: string; data: VideoNodeData
           onChange={(e) => updateNodeData(nodeId, { size: e.target.value })}
           className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:border-amber-500 focus:outline-none"
         >
+          <option value="1152x768">横屏 1152x768 (推荐)</option>
           <option value="1280x720">横屏 1280x720</option>
           <option value="720x1280">竖屏 720x1280</option>
           <option value="1024x1024">方形 1024x1024</option>

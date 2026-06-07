@@ -263,7 +263,7 @@ export function createDefaultVideoNodeData(t: (key: string, vars?: Record<string
     label: t("node.label.video"),
     modelId: getDefaultModelId("video"),
     prompt: "",
-    size: "1280x720",
+    size: "1152x768",
     count: 1,
     numFrames: 121,
     fps: 24,

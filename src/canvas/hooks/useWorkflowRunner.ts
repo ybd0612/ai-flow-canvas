@@ -31,7 +31,7 @@ import { getTranslation } from "@/i18n";
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
 
-const VIDEO_POLL_INTERVAL_MS = 3_000;
+const VIDEO_POLL_INTERVAL_MS = 5_000;
 const VIDEO_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 
 type RFNode = Node<Record<string, unknown>>;
@@ -266,6 +266,7 @@ async function callImageAPI(apiKey: string, _baseUrl: string, params: ImageParam
 
 
   body.extra_body = {
+    response_format: "url",
     ...(params.extraBody ?? {}),
   };
 
@@ -347,7 +348,7 @@ async function callVideoPollAPI(apiKey: string, _baseUrl: string, videoId: strin
   let status: VideoTaskStatus["status"];
   switch (rawStatus) {
     case "pending": case "queued": status = "pending"; break;
-    case "processing": case "running": status = "processing"; break;
+    case "processing": case "running": case "in_progress": status = "processing"; break;
     case "completed": case "succeeded": status = "completed"; break;
     case "failed": case "cancelled": status = "failed"; break;
     default: status = "pending";
