@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { ImageIcon, Link } from "lucide-react";
+import { ImageIcon, Link, Images } from "lucide-react";
 import { useCanvasStore } from "@/stores/canvasStore";
 import type { ImageNodeData } from "@/canvas/types";
 import type { AnyNodeData } from "@/canvas/types";
@@ -8,7 +8,6 @@ import { NodeShell } from "./NodeShell";
 import { useT } from '@/i18n';
 import { sanitizePrompt } from "@/lib/validation";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
-
 import { Lightbox } from "@/components/ui/Lightbox";
 
 function ImageNodeInner({ id, data }: NodeProps) {
@@ -22,16 +21,25 @@ function ImageNodeInner({ id, data }: NodeProps) {
   const connectedImageEdge = edges.find(
     (e) => e.target === id && e.targetHandle === "image-in"
   );
-  const upstreamImageUrl = connectedImageEdge
+  const upstreamImageUrl: string | undefined = connectedImageEdge
     ? (() => {
         const srcNode = nodes.find((n) => n.id === connectedImageEdge.source);
         if (!srcNode) return undefined;
         const srcData = srcNode.data as unknown as AnyNodeData;
-        return "outputUrl" in srcData ? (srcData as ImageNodeData).outputUrl : undefined;
+        return "outputUrl" in srcData ? (srcData as ImageNodeData).outputUrl as string | undefined : undefined;
       })()
     : undefined;
 
   const hasInputImage = !!upstreamImageUrl;
+
+  // Collect all images from other image nodes in the canvas
+  const canvasGalleryImages: string[] = [];
+  for (const n of nodes) {
+    if (n.id === id || n.type !== "image") continue;
+    const nd = n.data as unknown as ImageNodeData;
+    if (nd.outputUrls) canvasGalleryImages.push(...nd.outputUrls);
+    else if (nd.outputUrl) canvasGalleryImages.push(nd.outputUrl);
+  }
 
   return (
     <NodeShell
@@ -60,11 +68,54 @@ function ImageNodeInner({ id, data }: NodeProps) {
             <Link size={10} />
             <span>{t("image.connectedInput")}</span>
           </div>
-          <Lightbox src={upstreamImageUrl} alt="Input reference">
+          <Lightbox src={upstreamImageUrl!} alt="Input reference">
             <img
-              src={upstreamImageUrl}
+              src={upstreamImageUrl!}
               alt="Input reference"
               className="max-h-24 w-full rounded-md border border-violet-800/40 object-contain"
+            />
+          </Lightbox>
+        </div>
+      )}
+
+      {/* Canvas image gallery — pick from other image nodes */}
+      {!hasInputImage && canvasGalleryImages.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1 text-xs text-slate-500">
+            <Images size={10} />
+            <span>{t("image.selectFromCanvas")}</span>
+          </div>
+          <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+            {canvasGalleryImages.map((url, i) => (
+              <button
+                key={i}
+                onClick={() => updateNodeData(id, { referenceImageUrl: d.referenceImageUrl === url ? undefined : url } as Partial<ImageNodeData>)}
+                className={`h-10 w-10 flex-shrink-0 overflow-hidden rounded border transition ${d.referenceImageUrl === url ? "border-violet-400 ring-1 ring-violet-400" : "border-slate-700 hover:border-slate-500"}`}
+              >
+                <img src={url} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Show selected reference image */}
+      {d.referenceImageUrl && !hasInputImage && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-violet-400">{t("image.selectedReference")}</span>
+            <button
+              onClick={() => updateNodeData(id, { referenceImageUrl: undefined } as Partial<ImageNodeData>)}
+              className="text-xs text-slate-500 hover:text-red-400"
+            >
+              {t("image.clearReference")}
+            </button>
+          </div>
+          <Lightbox src={d.referenceImageUrl} alt="Reference">
+            <img
+              src={d.referenceImageUrl}
+              alt="Reference"
+              className="max-h-20 w-full rounded-md border border-violet-800/40 object-contain"
             />
           </Lightbox>
         </div>
@@ -76,7 +127,7 @@ function ImageNodeInner({ id, data }: NodeProps) {
           updateNodeData(id, { prompt: e.target.value } as Partial<ImageNodeData>)
         }
         onBlur={(e) => updateNodeData(id, { prompt: sanitizePrompt(e.target.value) } as Partial<ImageNodeData>)}
-        placeholder={hasInputImage ? t("image.img2imgPlaceholder") : t("image.placeholder")}
+        placeholder={(hasInputImage || d.referenceImageUrl) ? t("image.img2imgPlaceholder") : t("image.placeholder")}
         rows={3}
         className="w-full resize-none rounded-md border border-slate-700 bg-slate-800 p-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-violet-500 focus:outline-none"
       />

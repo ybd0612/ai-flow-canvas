@@ -92,6 +92,8 @@ export interface ImageNodeData extends BaseNodeData {
   outputUrl?: string;
   outputUrls?: string[];
   revisedPrompt?: string;
+  /** Manually selected reference image URL from canvas gallery */
+  referenceImageUrl?: string;
 }
 
 /* ── Video generation / output node ─────────────────────────────────────── */
