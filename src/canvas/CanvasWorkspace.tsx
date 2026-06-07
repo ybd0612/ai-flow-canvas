@@ -113,6 +113,7 @@ function CanvasInner() {
   const setStoreNodes = useCanvasStore((s) => s.setNodes);
   const setStoreEdges = useCanvasStore((s) => s.setEdges);
   const addStoreNode = useCanvasStore((s) => s.addNode);
+  const removeStoreNode = useCanvasStore((s) => s.removeNode);
   const showGrid = useSettingsStore((s) => s.showGrid);
   const t = useT();
   const showMinimap = useSettingsStore((s) => s.showMinimap);
@@ -277,6 +278,27 @@ function CanvasInner() {
     setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
   }, [setEdges]);
 
+
+  /* ── Custom delete handler (IME-safe) ──────────────────────────────────── */
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if ((e as unknown as KeyboardEvent).isComposing) return; // Skip during IME composition
+      if (e.key === "Backspace" || e.key === "Delete") {
+        const selected = nodes.filter((n) => n.selected);
+        const selectedEdges = edges.filter((ed) => ed.selected);
+        if (selected.length === 0 && selectedEdges.length === 0) return;
+        e.preventDefault();
+        if (selectedEdges.length > 0) {
+          setEdges((eds) => eds.filter((ed) => !ed.selected));
+        }
+        for (const n of selected) {
+          removeStoreNode(n.id);
+        }
+        setSelectedNodeId(null);
+      }
+    },
+    [nodes, edges, setEdges, removeStoreNode],
+  );
   /* ── Drag-and-drop ────────────────────────────────────────────────────── */
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -334,6 +356,7 @@ function CanvasInner() {
       className="h-full w-full"
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onKeyDown={handleKeyDown}
     >
       <ReactFlow
         nodes={nodes}
@@ -372,7 +395,7 @@ function CanvasInner() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         isValidConnection={(conn) => validateCanvasConnection(conn as Connection, nodes, edges)}
-        deleteKeyCode={["Backspace", "Delete"]}
+        deleteKeyCode={null}
         onEdgeClick={(_event, edge) => {
           setSelectedNodeId(null);
           setEdges((eds) =>

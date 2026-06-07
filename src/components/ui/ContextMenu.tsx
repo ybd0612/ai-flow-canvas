@@ -25,7 +25,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
       }
     };
     const keyHandler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !e.isComposing) onClose();
     };
     document.addEventListener("mousedown", handler);
     document.addEventListener("keydown", keyHandler);
