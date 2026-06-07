@@ -48,6 +48,19 @@ import {
 
 /* ── Node type registry for drag-and-drop ───────────────────────────────── */
 
+/* ── Ensure an active task exists before adding a node ──────────────────── */
+function ensureActiveTask(t: ReturnType<typeof useT>): void {
+  const { activeTaskId, createTask } = useTaskStore.getState();
+  if (activeTaskId) return;
+  const snapshot = {
+    nodes: [],
+    edges: [],
+    viewport: { x: 0, y: 0, zoom: 1 },
+    capturedAt: Date.now(),
+  };
+  createTask(t("task.new"), snapshot);
+}
+
 function getNodeFactories(t: (key: string, vars?: Record<string, unknown>) => string) {
   return {
     prompt: () => createDefaultPromptNodeData(t),
@@ -289,6 +302,7 @@ function CanvasInner() {
         data: factories[nodeType as DragNodeType](),
       };
 
+      ensureActiveTask(t);
       addStoreNode(newNode);
       setNodes((nds) => [...nds, newNode]);
     },
@@ -348,6 +362,7 @@ function CanvasInner() {
                 position: pos,
                 data: factories[type](),
               };
+              ensureActiveTask(t);
               addStoreNode(newNode);
               setNodes((nds) => [...nds, newNode]);
             },
