@@ -334,8 +334,13 @@ async function callVideoCreateAPI(apiKey: string, _baseUrl: string, params: Vide
 }
 
 async function callVideoPollAPI(apiKey: string, _baseUrl: string, videoId: string): Promise<VideoTaskStatus> {
-    const pollUrl = `${resolveBaseUrl(_baseUrl)}/videos/${videoId}`;
-    const resp = await fetch(pollUrl, {
+  // Recommended: use video_id query (endpoint has no /v1 prefix)
+  // Fallback: use /v1/videos/{task_id} for backward compat
+  const strippedBase = resolveBaseUrl(_baseUrl).replace(/\/v1$/, "");
+  const pollUrl = videoId.startsWith("video_")
+    ? `${strippedBase}/agnesapi?video_id=${videoId}`
+    : `${resolveBaseUrl(_baseUrl)}/videos/${videoId}`;
+  const resp = await fetch(pollUrl, {
     headers: { Authorization: `Bearer ${apiKey}` },
   });
 
@@ -356,18 +361,20 @@ async function callVideoPollAPI(apiKey: string, _baseUrl: string, videoId: strin
     default: status = "pending";
   }
 
+  // Per Agnes docs, video URL is in `remixed_from_video_id` when completed
+  const videoUrl = json.remixed_from_video_id ?? json.video_url ?? json.output?.video_url ?? "";
+
   return {
     videoId,
     status,
     progress: json.progress ?? 0,
-    videoUrl: json.video_url ?? json.output?.video_url,
+    videoUrl,
     coverImageUrl: json.cover_image_url,
     duration: json.seconds ?? json.output?.duration ?? json.duration,
     error: json.error ?? undefined,
     usage: json.usage ? { videoFrames: json.usage.total_frames ?? json.usage.video_frames } : undefined,
   };
 }
-
 /* ── Runner hook ─────────────────────────────────────────────────────────── */
 
 export interface WorkflowRunOptions {
