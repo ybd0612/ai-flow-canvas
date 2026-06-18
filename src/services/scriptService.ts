@@ -21,6 +21,39 @@ interface RawShot {
 }
 
 /**
+ * Extract JSON object from a model response that may contain markdown fences,
+ * preamble text, or trailing commentary.
+ */
+function extractJsonFromResponse(content: string): string | null {
+  // 1. Try markdown code block first (```json ... ``` or ``` ... ```)
+  const fenced = content.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
+  if (fenced) {
+    const inner = fenced[1].trim();
+    if (inner.startsWith("{")) return inner;
+  }
+
+  // 2. Try to find the outermost { ... } that contains "shots"
+  // Use brace-counting to avoid greedy over-match
+  const start = content.indexOf("{");
+  if (start === -1) return null;
+
+  let depth = 0;
+  for (let i = start; i < content.length; i++) {
+    if (content[i] === "{") depth++;
+    if (content[i] === "}") depth--;
+    if (depth === 0) {
+      return content.slice(start, i + 1);
+    }
+  }
+
+  // 3. Fallback: last resort greedy match
+  const fallback = content.match(/\{[\s\S]*\}/);
+  return fallback ? fallback[0] : null;
+}
+
+const MAX_SCRIPT_RETRIES = 2;
+
+/**
  * Call the text model to generate a structured shot list from a user prompt.
  * Returns an array of shots (without id/index/status — those are added by the store).
  */
@@ -69,45 +102,63 @@ Requirements:
 - 4-6 shots total`;
 
   const url = `${opts.baseUrl.replace(/\/+$/, "")}/chat/completions`;
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${opts.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: MODELS.text,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: opts.prompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 2048,
-    }),
-  });
 
-  if (!resp.ok) {
-    const body = await resp.text().catch(() => "");
-    throw new Error(`Script API error ${resp.status}: ${body}`);
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= MAX_SCRIPT_RETRIES; attempt++) {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${opts.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: MODELS.text,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: opts.prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      throw new Error(`Script API error ${resp.status}: ${body}`);
+    }
+
+    const json = await resp.json();
+    const content: string = json.choices?.[0]?.message?.content ?? "";
+
+    const jsonStr = extractJsonFromResponse(content);
+    if (!jsonStr) {
+      lastError = new Error(
+        `无法从模型响应中提取 JSON（第 ${attempt + 1} 次尝试）。响应内容：${content.slice(0, 200)}`,
+      );
+      if (attempt < MAX_SCRIPT_RETRIES) continue;
+      throw lastError;
+    }
+
+    try {
+      const parsed = JSON.parse(jsonStr) as { shots: RawShot[] };
+      if (!Array.isArray(parsed.shots) || parsed.shots.length === 0) {
+        throw new Error("Model returned empty or invalid shots array.");
+      }
+
+      return parsed.shots.map((s) => ({
+        scriptText: s.scriptText ?? "",
+        visualPrompt: s.visualPrompt ?? "",
+        duration: [3, 5, 8].includes(s.duration) ? s.duration : 5,
+      }));
+    } catch (parseErr) {
+      lastError = new Error(
+        `JSON 解析失败（第 ${attempt + 1} 次尝试）：${parseErr instanceof Error ? parseErr.message : String(parseErr)}。提取内容：${jsonStr.slice(0, 200)}`,
+      );
+      if (attempt < MAX_SCRIPT_RETRIES) continue;
+      throw lastError;
+    }
   }
 
-  const json = await resp.json();
-  const content: string = json.choices?.[0]?.message?.content ?? "";
-
-  // Extract JSON from the response (may be wrapped in markdown code block)
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error("Failed to parse script JSON from model response.");
-  }
-
-  const parsed = JSON.parse(jsonMatch[0]) as { shots: RawShot[] };
-  if (!Array.isArray(parsed.shots) || parsed.shots.length === 0) {
-    throw new Error("Model returned empty or invalid shots array.");
-  }
-
-  return parsed.shots.map((s) => ({
-    scriptText: s.scriptText ?? "",
-    visualPrompt: s.visualPrompt ?? "",
-    duration: [3, 5, 8].includes(s.duration) ? s.duration : 5,
-  }));
+  throw lastError ?? new Error("Script generation failed after retries.");
 }
