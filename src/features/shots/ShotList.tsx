@@ -3,7 +3,7 @@
 // Left panel: list of shots with status badges and selection.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { useProjectStore, type ShotStatus } from "@/stores/projectStore";
+import { useProjectStore, selectActiveProject, type ShotStatus } from "@/stores/projectStore";
 import { useT } from "@/i18n";
 import {
   Image as ImageIcon,
@@ -32,7 +32,7 @@ const statusConfig: Record<ShotStatus, { icon: typeof Hash; color: string }> = {
 };
 
 export function ShotList({ selectedShotId, onSelect }: ShotListProps) {
-  const project = useProjectStore((s) => s.getActiveProject());
+  const project = useProjectStore(selectActiveProject);
   const shots = project?.shots ?? [];
   const removeShot = useProjectStore((s) => s.removeShot);
   const t = useT();

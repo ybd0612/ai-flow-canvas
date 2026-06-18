@@ -4,13 +4,13 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback } from "react";
-import { useProjectStore } from "@/stores/projectStore";
+import { useProjectStore, selectActiveProject } from "@/stores/projectStore";
 import { useT } from "@/i18n";
 import { concatenateVideos } from "@/services/renderService";
 import { Download, Loader2, Scissors } from "lucide-react";
 
 export function FinalPreview() {
-  const project = useProjectStore((s) => s.getActiveProject());
+  const project = useProjectStore(selectActiveProject);
   const t = useT();
   const [isRendering, setIsRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState(0);

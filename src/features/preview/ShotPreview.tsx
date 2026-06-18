@@ -3,7 +3,7 @@
 // Center panel: preview image and video for the selected shot.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { useProjectStore } from "@/stores/projectStore";
+import { useProjectStore, selectActiveProject } from "@/stores/projectStore";
 import { useT } from "@/i18n";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Image as ImageIcon, Film, Loader2, AlertCircle } from "lucide-react";
@@ -13,7 +13,7 @@ interface ShotPreviewProps {
 }
 
 export function ShotPreview({ shotId }: ShotPreviewProps) {
-  const project = useProjectStore((s) => s.getActiveProject());
+  const project = useProjectStore(selectActiveProject);
   const shot = project?.shots.find((sh) => sh.id === shotId) ?? null;
   const t = useT();
 

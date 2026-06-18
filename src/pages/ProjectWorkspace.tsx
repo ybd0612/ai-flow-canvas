@@ -5,7 +5,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useRef } from "react";
-import { useProjectStore, type Shot } from "@/stores/projectStore";
+import { useProjectStore, selectActiveProject, type Shot } from "@/stores/projectStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useT } from "@/i18n";
 import { ScriptPanel } from "@/features/script/ScriptPanel";
@@ -31,7 +31,7 @@ type LeftTab = "projects" | "shots" | "history";
 
 export function ProjectWorkspace() {
   const t = useT();
-  const project = useProjectStore((s) => s.getActiveProject());
+  const project = useProjectStore(selectActiveProject);
   const projects = useProjectStore((s) => s.projects);
   const createProject = useProjectStore((s) => s.createProject);
   const updateProject = useProjectStore((s) => s.updateProject);
@@ -58,7 +58,7 @@ export function ProjectWorkspace() {
         return;
       }
 
-      let proj = useProjectStore.getState().getActiveProject();
+      let proj = selectActiveProject(useProjectStore.getState());
       if (!proj) {
         proj = createProject(prompt.slice(0, 30) || t("pipeline.newProject"));
       }
@@ -93,7 +93,7 @@ export function ProjectWorkspace() {
 
   // Run full pipeline
   const handleRunAll = useCallback(async () => {
-    const proj = useProjectStore.getState().getActiveProject();
+    const proj = selectActiveProject(useProjectStore.getState());
     if (!proj || proj.shots.length === 0) return;
 
     setIsRunning(true);
@@ -123,7 +123,7 @@ export function ProjectWorkspace() {
 
   // Retry all failed shots (skip script phase, only re-run image+video)
   const handleRetryFailed = useCallback(async () => {
-    const proj = useProjectStore.getState().getActiveProject();
+    const proj = selectActiveProject(useProjectStore.getState());
     if (!proj) return;
     const failedShotIds = proj.shots.filter((s) => s.status === "failed").map((s) => s.id);
     if (failedShotIds.length === 0) return;
@@ -149,7 +149,7 @@ export function ProjectWorkspace() {
     const { providerConfig } = useSettingsStore.getState();
     if (!providerConfig.apiKey || !providerConfig.baseUrl) return;
 
-    const proj = useProjectStore.getState().getActiveProject();
+    const proj = selectActiveProject(useProjectStore.getState());
     if (!proj) return;
 
     const shot = proj.shots.find((s) => s.id === shotId);
@@ -176,7 +176,7 @@ export function ProjectWorkspace() {
     const { providerConfig } = useSettingsStore.getState();
     if (!providerConfig.apiKey || !providerConfig.baseUrl) return;
 
-    const proj = useProjectStore.getState().getActiveProject();
+    const proj = selectActiveProject(useProjectStore.getState());
     if (!proj) return;
 
     const shot = proj.shots.find((s) => s.id === shotId);

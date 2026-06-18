@@ -93,9 +93,6 @@ interface ProjectState {
   activeProjectId: string | null;
   history: HistoryEntry[];
 
-  /* Derived (computed via getter in component) */
-  getActiveProject: () => Project | null;
-
   /* Project actions */
   createProject: (title: string) => Project;
   switchProject: (id: string) => void;
@@ -137,11 +134,6 @@ export const useProjectStore = create<ProjectState>()(
       projects: [],
       activeProjectId: null,
       history: [],
-
-      getActiveProject: () => {
-        const { projects, activeProjectId } = get();
-        return projects.find((p) => p.id === activeProjectId) ?? null;
-      },
 
       /* ── Project actions ────────────────────────────────────────────── */
 
@@ -264,7 +256,7 @@ export const useProjectStore = create<ProjectState>()(
         const newShot: Shot = {
           ...shot,
           id: newId("shot"),
-          index: get().getActiveProject()?.shots.length ?? 0,
+          index: (get().projects.find((p) => p.id === get().activeProjectId)?.shots.length) ?? 0,
           status: "idle",
         };
         set((s) => ({
@@ -364,3 +356,11 @@ export const useProjectStore = create<ProjectState>()(
     },
   ),
 );
+
+/**
+ * Standalone selector for getting the active project.
+ * Use with: const project = useProjectStore(selectActiveProject)
+ * Zustand tracks `projects` and `activeProjectId` dependencies correctly.
+ */
+export const selectActiveProject = (s: ProjectState): Project | undefined =>
+  s.projects.find((p) => p.id === s.activeProjectId);
