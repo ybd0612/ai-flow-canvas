@@ -35,30 +35,34 @@ export async function runPipeline(prompt: string, opts: RunOptions = {}) {
   const imageSize = aspectRatioToImageSize(project.aspectRatio);
   const videoSize = aspectRatioToVideoSize(project.aspectRatio);
 
-  // ── Phase 1: Script ─────────────────────────────────────────────────────
-  opts.onPhaseStart?.("script");
-  store.setProjectStatus("scripting");
+  // ── Phase 1: Script (skip if prompt is empty and shots already exist) ──
+  const shouldGenerateScript = prompt.trim().length > 0;
 
-  try {
-    const rawShots = await generateScript({
-      apiKey,
-      baseUrl,
-      prompt,
-      language: project.language,
-      aspectRatio: project.aspectRatio,
-    });
+  if (shouldGenerateScript) {
+    opts.onPhaseStart?.("script");
+    store.setProjectStatus("scripting");
 
-    const shots: Shot[] = rawShots.map((s, i) => ({
-      id: `shot_${Date.now()}_${i}`,
-      index: i,
-      status: "scripted" as const,
-      ...s,
-    }));
+    try {
+      const rawShots = await generateScript({
+        apiKey,
+        baseUrl,
+        prompt,
+        language: project.language,
+        aspectRatio: project.aspectRatio,
+      });
 
-    store.setShots(shots);
-  } catch (err) {
-    store.setProjectStatus("failed", err instanceof Error ? err.message : String(err));
-    throw err;
+      const shots: Shot[] = rawShots.map((s, i) => ({
+        id: `shot_${Date.now()}_${i}`,
+        index: i,
+        status: "scripted" as const,
+        ...s,
+      }));
+
+      store.setShots(shots);
+    } catch (err) {
+      store.setProjectStatus("failed", err instanceof Error ? err.message : String(err));
+      throw err;
+    }
   }
 
   // ── Phase 2: Images (parallel, max 3 concurrent) ────────────────────────
