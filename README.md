@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 wxhb — AI 一键成片
+# 🎬 AI Video Maker
 
 **面向 AI 创作的短视频制作工具**
 
@@ -46,8 +46,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/wxhb.git
-cd wxhb
+git clone https://github.com/ybd0612/ai-video-maker.git
+cd ai-video-maker
 
 # 安装依赖
 npm install

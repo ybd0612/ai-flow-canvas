@@ -1,4 +1,4 @@
-# wxhb — AI 一键成片
+# AI Video Maker — AI 一键成片
 
 面向 AI 创作的短视频制作工具。采用 Pipeline 架构（脚本 → 图片 → 视频 → 拼接），集成 Agnes AI 的文本、图像、视频三大模型，支持中英文切换。
 

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 wxhb — AI One-Click Video Maker
+# 🎬 AI Video Maker
 
 **AI-Powered Short Video Production Tool**
 
@@ -46,8 +46,8 @@ A pipeline-based one-click video generation tool integrating Agnes AI's text, im
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/wxhb.git
-cd wxhb
+git clone https://github.com/ybd0612/ai-video-maker.git
+cd ai-video-maker
 
 # Install dependencies
 npm install
