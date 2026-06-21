@@ -37,6 +37,7 @@ export interface Shot {
   index: number;
   scriptText: string;
   visualPrompt: string;
+  motionPrompt: string;
   duration: number;
   status: ShotStatus;
   imageUrl?: string;

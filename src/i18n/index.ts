@@ -239,6 +239,7 @@ const zh = {
   "pipeline.noShotSelected": "未选中镜头",
   "pipeline.scriptText": "文案",
   "pipeline.visualPrompt": "画面描述",
+  "pipeline.motionPrompt": "动态描述",
   "pipeline.duration": "时长",
   "pipeline.referenceImage": "参考图",
   "pipeline.video": "视频",
@@ -294,6 +295,7 @@ const zh = {
   "aiAssist.newConversation": "新对话",
   "aiAssist.optimizeScriptText": "AI 优化文案",
   "aiAssist.optimizeVisualPrompt": "AI 优化画面描述",
+  "aiAssist.optimizeMotionPrompt": "AI 优化动态描述",
   "aiAssist.optimizeMainPrompt": "AI 优化主题",
   "aiAssist.emptyField": "当前字段为空",
 
@@ -534,6 +536,7 @@ const en = {
   "pipeline.noShotSelected": "No shot selected",
   "pipeline.scriptText": "Script",
   "pipeline.visualPrompt": "Visual Prompt",
+  "pipeline.motionPrompt": "Motion Prompt",
   "pipeline.duration": "Duration",
   "pipeline.referenceImage": "Reference Image",
   "pipeline.video": "Video",
@@ -589,6 +592,7 @@ const en = {
   "aiAssist.newConversation": "New Conversation",
   "aiAssist.optimizeScriptText": "AI Optimize Script",
   "aiAssist.optimizeVisualPrompt": "AI Optimize Visual Prompt",
+  "aiAssist.optimizeMotionPrompt": "AI Optimize Motion Prompt",
   "aiAssist.optimizeMainPrompt": "AI Optimize Topic",
   "aiAssist.emptyField": "Current field is empty",
 } as const;

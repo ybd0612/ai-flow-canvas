@@ -17,7 +17,7 @@ import { runPipeline, runSingleShot, retryFailedVideos } from "@/services/pipeli
 import { generateScript } from "@/services/scriptService";
 import { generateImage, aspectRatioToImageSize } from "@/services/imageService";
 import { generateVideo, aspectRatioToVideoSize } from "@/services/videoService";
-import { SYSTEM_PROMPT_SCRIPT_TEXT, SYSTEM_PROMPT_VISUAL_PROMPT, SYSTEM_PROMPT_MAIN_PROMPT } from "@/services/chatService";
+import { SYSTEM_PROMPT_SCRIPT_TEXT, SYSTEM_PROMPT_VISUAL_PROMPT, SYSTEM_PROMPT_MAIN_PROMPT, SYSTEM_PROMPT_MOTION_PROMPT } from "@/services/chatService";
 import { AiAssistDrawer } from "@/components/ui/AiAssistDrawer";
 import { ProjectSidebar } from "@/features/projects/ProjectSidebar";
 import { HistoryPanel } from "@/features/history/HistoryPanel";
@@ -53,7 +53,7 @@ export function ProjectWorkspace() {
 
   // AI Assist drawer state
   const [aiAssistTarget, setAiAssistTarget] = useState<{
-    field: "scriptText" | "visualPrompt" | "mainPrompt";
+    field: "scriptText" | "visualPrompt" | "motionPrompt" | "mainPrompt";
     shotId?: string;
     currentValue: string;
     fieldName: string;
@@ -84,13 +84,15 @@ export function ProjectWorkspace() {
 
   // AI Assist handlers
   const handleOpenShotAiAssist = useCallback(
-    (field: "scriptText" | "visualPrompt", currentValue: string) => {
-      const systemPrompt = field === "scriptText"
-        ? SYSTEM_PROMPT_SCRIPT_TEXT
-        : SYSTEM_PROMPT_VISUAL_PROMPT;
-      const fieldName = field === "scriptText"
-        ? t("pipeline.scriptText")
-        : t("pipeline.visualPrompt");
+    (field: "scriptText" | "visualPrompt" | "motionPrompt", currentValue: string) => {
+      const systemPrompt =
+        field === "scriptText" ? SYSTEM_PROMPT_SCRIPT_TEXT
+        : field === "visualPrompt" ? SYSTEM_PROMPT_VISUAL_PROMPT
+        : SYSTEM_PROMPT_MOTION_PROMPT;
+      const fieldName =
+        field === "scriptText" ? t("pipeline.scriptText")
+        : field === "visualPrompt" ? t("pipeline.visualPrompt")
+        : t("pipeline.motionPrompt");
       setAiAssistTarget({
         field,
         shotId: selectedShotId ?? undefined,

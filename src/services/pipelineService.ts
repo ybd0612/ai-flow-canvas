@@ -140,7 +140,7 @@ export async function runPipeline(prompt: string, opts: RunOptions = {}) {
           {
             apiKey,
             baseUrl,
-            prompt: shot.visualPrompt,
+            prompt: shot.motionPrompt || shot.visualPrompt,
             imageUrl: shot.imageUrl,
             size: videoSize,
             duration: shot.duration,
@@ -206,7 +206,7 @@ export async function runSingleShot(shotId: string, opts: RunOptions = {}) {
       {
         apiKey,
         baseUrl,
-        prompt: shot.visualPrompt,
+        prompt: shot.motionPrompt || shot.visualPrompt,
         imageUrl,
         size: videoSize,
         duration: shot.duration,
@@ -252,7 +252,7 @@ export async function retryFailedVideos(opts: RunOptions = {}) {
         {
           apiKey,
           baseUrl,
-          prompt: shot.visualPrompt,
+          prompt: shot.motionPrompt || shot.visualPrompt,
           imageUrl: shot.imageUrl!,
           size: videoSize,
           duration: shot.duration,

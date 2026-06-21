@@ -17,6 +17,7 @@ interface GenerateScriptOptions {
 interface RawShot {
   scriptText: string;
   visualPrompt: string;
+  motionPrompt: string;
   duration: number;
 }
 
@@ -69,15 +70,30 @@ export async function generateScript(
   "shots": [
     {
       "scriptText": "该镜头的旁白/文案（中文，简短有力）",
-      "visualPrompt": "该镜头的画面描述（英文，用于 AI 图像生成，详细具体，包含风格、构图、光线）",
+      "visualPrompt": "文生图提示词（英文，静态画面描述：主体+场景背景+光影色调+艺术风格，详细具体）",
+      "motionPrompt": "图生视频提示词（英文，动态描述：主体动作+镜头运镜+环境变化，1-2个核心动作即可）",
       "duration": 5
     }
   ]
 }
 
-要求：
+visualPrompt（文生图）要求：
+- 必须用英文，短语用逗号分隔
+- 包含：主体描述、场景/背景、光影/色调、艺术风格
+- 主体姿态要自然稳定，避免动作幅度过大的姿势
+- 尽量用中景或特写构图
+- 示例：A young woman with long dark hair, standing in a sunlit cafe, warm golden hour light, soft bokeh background, photorealistic, cinematic composition, 8k
+
+motionPrompt（图生视频）要求：
+- 必须用英文
+- 只描述动态元素：主体动作、镜头运镜、环境变化
+- 每个镜头只给 1-2 个核心动作，不要贪多
+- 使用专业镜头语言：slow dolly in, pan left, tilt up, close-up tracking shot 等
+- 不要重复描述静态元素（衣服颜色、发型等，图片已经锚定了）
+- 示例：The woman slowly turns her head and smiles gently, camera slowly dollies in, steam rising from the coffee cup, soft natural lighting shifts
+
+其他要求：
 - 每个镜头 duration 为 3、5 或 8 秒
-- visualPrompt 必须用英文，描述要具体、可视化
 - scriptText 用用户相同的语言
 - 整体节奏要有起承转合
 - 总镜头数 4-6 个`
@@ -88,15 +104,30 @@ Return strictly in this JSON format, no other text:
   "shots": [
     {
       "scriptText": "Narration/copy for this shot (short, punchy)",
-      "visualPrompt": "Detailed visual description for AI image generation (English, include style, composition, lighting)",
+      "visualPrompt": "Text-to-image prompt (English, static scene: subject + background + lighting + art style, detailed)",
+      "motionPrompt": "Image-to-video prompt (English, dynamic: subject action + camera movement + environment change, 1-2 core actions)",
       "duration": 5
     }
   ]
 }
 
-Requirements:
+visualPrompt (Text-to-Image) requirements:
+- Must be in English, comma-separated phrases
+- Include: subject description, scene/background, lighting/color palette, art style
+- Keep subject pose natural and stable, avoid extreme action poses
+- Prefer medium shot or close-up composition
+- Example: A young woman with long dark hair, standing in a sunlit cafe, warm golden hour light, soft bokeh background, photorealistic, cinematic composition, 8k
+
+motionPrompt (Image-to-Video) requirements:
+- Must be in English
+- Only describe dynamic elements: subject action, camera movement, environment changes
+- Give only 1-2 core actions per shot, don't overload
+- Use professional camera language: slow dolly in, pan left, tilt up, close-up tracking shot, etc.
+- Don't repeat static elements (clothing color, hairstyle — the image already anchors those)
+- Example: The woman slowly turns her head and smiles gently, camera slowly dollies in, steam rising from the coffee cup, soft natural lighting shifts
+
+Other requirements:
 - Each shot duration: 3, 5, or 8 seconds
-- visualPrompt must be in English, detailed and visual
 - scriptText in the user's language
 - Overall pacing: setup, development, climax, resolution
 - 4-6 shots total`;
@@ -157,21 +188,25 @@ Requirements:
       const shots = parsed.shots.map((s) => ({
         scriptText: s.scriptText ?? "",
         visualPrompt: s.visualPrompt ?? "",
+        motionPrompt: s.motionPrompt ?? "",
         duration: [3, 5, 8].includes(s.duration) ? s.duration : 5,
       }));
 
-      // Validate: every shot must have a non-empty visualPrompt
-      // If empty, generate a fallback from scriptText
+      // Validate: every shot must have non-empty visualPrompt and motionPrompt
+      // If empty, generate fallbacks from scriptText
       for (const shot of shots) {
         if (!shot.visualPrompt.trim() && shot.scriptText.trim()) {
-          shot.visualPrompt = `Cinematic shot: ${shot.scriptText.trim()}, professional lighting, high quality, detailed composition`;
+          shot.visualPrompt = `Cinematic shot: ${shot.scriptText.trim()}, professional lighting, high quality, detailed composition, photorealistic, 8k`;
+        }
+        if (!shot.motionPrompt.trim() && shot.scriptText.trim()) {
+          shot.motionPrompt = `Slow cinematic camera movement, gentle ambient motion, subtle environmental changes, natural physics`;
         }
       }
 
-      // If any shot still has empty visualPrompt, reject and retry
-      const hasEmpty = shots.some((s) => !s.visualPrompt.trim());
+      // If any shot still has empty prompts, reject and retry
+      const hasEmpty = shots.some((s) => !s.visualPrompt.trim() || !s.motionPrompt.trim());
       if (hasEmpty && attempt < MAX_SCRIPT_RETRIES) {
-        lastError = new Error("部分分镜缺少画面描述，自动重试...");
+        lastError = new Error("部分分镜缺少提示词，自动重试...");
         continue;
       }
 

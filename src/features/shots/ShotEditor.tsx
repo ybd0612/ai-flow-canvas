@@ -12,7 +12,7 @@ interface ShotEditorProps {
   onClose: () => void;
   onRegenerateImage: (shotId: string) => void;
   onRegenerateVideo: (shotId: string) => void;
-  onOpenAiAssist: (field: "scriptText" | "visualPrompt", currentValue: string) => void;
+  onOpenAiAssist: (field: "scriptText" | "visualPrompt" | "motionPrompt", currentValue: string) => void;
   isProcessing: boolean;
 }
 
@@ -72,7 +72,7 @@ export function ShotEditor({
         />
       </div>
 
-      {/* Visual prompt */}
+      {/* Visual prompt (text-to-image) */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <label className="text-[11px] font-medium text-slate-500">
@@ -89,8 +89,30 @@ export function ShotEditor({
         <textarea
           value={shot.visualPrompt}
           onChange={(e) => updateShot(shot.id, { visualPrompt: e.target.value })}
-          rows={4}
+          rows={3}
           className="w-full resize-none rounded-md border border-slate-700 bg-slate-800 p-2 text-xs text-slate-100 focus:border-violet-500 focus:outline-none"
+        />
+      </div>
+
+      {/* Motion prompt (image-to-video) */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-[11px] font-medium text-slate-500">
+            {t("pipeline.motionPrompt")}
+          </label>
+          <button
+            onClick={() => onOpenAiAssist("motionPrompt", shot.motionPrompt)}
+            className="rounded p-0.5 text-slate-600 transition hover:bg-slate-700 hover:text-emerald-400"
+            title={t("aiAssist.optimizeMotionPrompt")}
+          >
+            <Sparkles size={11} />
+          </button>
+        </div>
+        <textarea
+          value={shot.motionPrompt}
+          onChange={(e) => updateShot(shot.id, { motionPrompt: e.target.value })}
+          rows={3}
+          className="w-full resize-none rounded-md border border-slate-700 bg-slate-800 p-2 text-xs text-slate-100 focus:border-amber-500 focus:outline-none"
         />
       </div>
 
