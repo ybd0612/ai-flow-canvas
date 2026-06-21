@@ -216,7 +216,9 @@ export async function runSingleShot(shotId: string, opts: RunOptions = {}) {
         size: videoSize,
         duration: shot.duration,
       },
-      undefined,
+      (progress) => {
+        useProjectStore.getState().updateShot(shotId, { videoProgress: progress });
+      },
       opts.signal,
     );
     store.updateShot(shotId, { videoUrl: result.videoUrl, status: "videoed" });
