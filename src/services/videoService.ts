@@ -4,7 +4,7 @@
 //
 // API 规格：
 //   创建任务：POST {baseUrl}/videos → 返回 { video_id }
-//   查询结果：GET {baseUrl}/videos/{taskId}
+//   查询结果：GET {origin}/agnesapi?video_id=<VIDEO_ID>
 // ────────────────────────────────────────────────────────────────────────────
 
 import { MODELS } from "@/lib/models";
@@ -64,10 +64,11 @@ function sanitizePrompt(prompt: string): string {
  * Returns the final video URL.
  *
  * 创建端点：POST {baseUrl}/videos
- * 查询端点：GET {baseUrl}/videos/{taskId}
+ * 查询端点：GET {origin}/agnesapi?video_id={videoId}
  *
- * 注意：轮询必须使用 create 响应中的 id 字段（完整复合标识符），
- * 而不是 video_id（内部短 ID）。参考官方实现 github.com/chenpipi0807/Agnes-API
+ * 注意：轮询端点与创建端点使用不同的路径。
+ * 创建用 {baseUrl}/videos，轮询用 {origin}/agnesapi。
+ * 参考官方文档 agnes-ai.com/doc/agnes-video-v20
  */
 export async function generateVideo(
   opts: CreateVideoOptions,
@@ -120,19 +121,19 @@ export async function generateVideo(
 
   const createJson = await createResp.json();
 
-  // Extract taskId — 轮询必须使用 id 字段（完整复合标识符）
-  // id 格式如 "video_<base64>"，包含 provider/model/video_id 等元数据
-  const taskId: string | undefined =
-    createJson.id ?? createJson.task_id ?? createJson.video_id;
-  if (!taskId) {
+  // Extract video_id from create response
+  const videoId: string | undefined =
+    createJson.video_id ?? createJson.task_id ?? createJson.id;
+  if (!videoId) {
     throw new Error(
-      `Video API 未返回任务 ID。响应: ${JSON.stringify(createJson).slice(0, 300)}`,
+      `Video API 未返回 video_id。响应: ${JSON.stringify(createJson).slice(0, 300)}`,
     );
   }
 
   // ── Poll for result ────────────────────────────────────────────────────
-  // 正确端点：GET {baseUrl}/videos/{taskId}
-  const pollUrl = `${baseUrl}/videos/${encodeURIComponent(taskId)}`;
+  // 轮询端点：GET {origin}/agnesapi?video_id={videoId}
+  const origin = new URL(baseUrl).origin;
+  const pollUrl = `${origin}/agnesapi?video_id=${encodeURIComponent(videoId)}`;
   const deadline = Date.now() + VIDEO_POLL_TIMEOUT_MS;
   let videoUrl = "";
   let coverImageUrl: string | undefined;
@@ -157,7 +158,7 @@ export async function generateVideo(
         notExistCount++;
         if (notExistCount > VIDEO_POLL_MAX_NOT_EXIST_RETRIES) {
           throw new Error(
-            `视频任务 ${taskId} 持续不存在（已重试 ${notExistCount} 次，HTTP ${pollResp.status}）。` +
+            `视频任务 ${videoId} 持续不存在（已重试 ${notExistCount} 次，HTTP ${pollResp.status}）。` +
             `轮询 URL: ${pollUrl}。响应: ${text.slice(0, 300)}`,
           );
         }
