@@ -3,8 +3,8 @@
 // Generates videos for shots using the Agnes Video API (async + polling).
 //
 // API 规格：
-//   创建任务：POST /videos → 返回 { video_id }
-//   查询结果：GET {baseUrl}?video_id=<VIDEO_ID>
+//   创建任务：POST {baseUrl}/videos → 返回 { video_id }
+//   查询结果：GET {baseUrl}/videos/{taskId}
 // ────────────────────────────────────────────────────────────────────────────
 
 import { MODELS } from "@/lib/models";
@@ -60,36 +60,18 @@ function sanitizePrompt(prompt: string): string {
 }
 
 /**
- * Derive the video API base URL from the configured provider base URL.
- *
- * 用户配置的 baseUrl 通常是 `https://apihub.agnes-ai.com/v1`（文本/图片 API），
- * 视频 API 端点在 `https://apihub.agnes-ai.com/agnesapi`。
- * 此函数提取域名部分并拼接 `/agnesapi`。
- */
-function resolveVideoBaseUrl(configuredUrl: string): string {
-  try {
-    const url = new URL(configuredUrl);
-    return `${url.origin}/agnesapi`;
-  } catch {
-    // Fallback: strip path and append /agnesapi
-    const match = configuredUrl.match(/^(https?:\/\/[^/]+)/);
-    return match ? `${match[1]}/agnesapi` : configuredUrl.replace(/\/+$/, "");
-  }
-}
-
-/**
  * Create an async video task and poll until completion.
  * Returns the final video URL.
  *
- * 创建端点：POST {videoBaseUrl}/videos
- * 查询端点：GET {videoBaseUrl}?video_id=<VIDEO_ID>
+ * 创建端点：POST {baseUrl}/videos
+ * 查询端点：GET {baseUrl}/videos/{taskId}
  */
 export async function generateVideo(
   opts: CreateVideoOptions,
   onProgress?: (progress: number) => void,
   signal?: AbortSignal,
 ): Promise<VideoResult> {
-  const videoBaseUrl = resolveVideoBaseUrl(opts.baseUrl);
+  const baseUrl = opts.baseUrl.replace(/\/+$/, "");
   const fps = opts.fps ?? 24;
   const numFrames = calcNumFrames(opts.duration, fps);
 
@@ -111,7 +93,7 @@ export async function generateVideo(
     body.image = opts.imageUrl;
   }
 
-  const createResp = await fetch(`${videoBaseUrl}/videos`, {
+  const createResp = await fetch(`${baseUrl}/videos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -145,8 +127,8 @@ export async function generateVideo(
   }
 
   // ── Poll for result ────────────────────────────────────────────────────
-  // 正确端点：GET {baseUrl}?video_id=<VIDEO_ID>
-  const pollUrl = `${videoBaseUrl}?video_id=${encodeURIComponent(videoId)}`;
+  // 正确端点：GET {baseUrl}/videos/{taskId}
+  const pollUrl = `${baseUrl}/videos/${encodeURIComponent(videoId)}`;
   const deadline = Date.now() + VIDEO_POLL_TIMEOUT_MS;
   let videoUrl = "";
   let coverImageUrl: string | undefined;
