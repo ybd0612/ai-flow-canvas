@@ -201,25 +201,38 @@ ${charSection}
         { "characterId": "char_xxx", "text": "角色台词", "delivery": "温柔地" }
       ],
       "scriptText": "该镜头旁白摘要（简短有力）",
-      "visualPrompt": "文生图提示词（英文，必须包含出场角色的完整外貌描述，与角色设定一致）",
-      "motionPrompt": "图生视频提示词（英文，动态描述）",
+      "subjectDesc": "主体描述（英文，如 A young woman with long dark hair）",
+      "sceneDesc": "场景/背景描述（英文，如 sitting in a sunlit cafe by the window）",
+      "detailDesc": "细节/服饰描述（英文，如 wearing a white blouse, delicate jewelry）",
+      "lightingDesc": "光影/色调（英文，如 warm golden hour light, cinematic rim light）",
+      "styleDesc": "艺术风格（英文，如 photorealistic, 8k, ultra-detailed）",
+      "negativePrompt": "负向提示词（英文，如 bad anatomy, extra limbs, blurry）",
+      "actionDesc": "主体动作（英文，如 slowly turns her head and smiles gently）",
+      "cameraDesc": "镜头运镜（英文，如 camera slowly dollies in, close-up tracking shot）",
+      "envChangeDesc": "环境变化（英文，如 steam rising from the coffee cup, leaves swaying）",
+      "motionSpeedDesc": "运动速率（英文，如 cinematic slow-motion, 24fps）",
+      "negativeMotionPrompt": "负向动态提示（英文，如 morphing, flickering, shaky camera）",
       "duration": 5
     }
   ]
 }
 
-visualPrompt 要求：
-- 必须用英文，短语用逗号分隔
-- 必须包含出场角色的完整外貌描述（与角色设定保持一致）
-- 包含：主体描述、场景/背景、光影/色调、艺术风格
-- 主体姿态要自然稳定
-- 示例：A young woman with long black hair wearing a white blouse, slim build, soft features, standing in a sunlit cafe, warm golden hour light, photorealistic, 8k
+文生图子字段要求（subjectDesc/sceneDesc/detailDesc/lightingDesc/styleDesc）：
+- 必须用英文，逗号分隔短语
+- subjectDesc：主体外貌描述，必须包含出场角色的完整外貌（与角色设定一致）
+- sceneDesc：场景/背景，有空间层次（前景/中景/远景）
+- detailDesc：服饰、道具、细节
+- lightingDesc：光线类型、色调氛围
+- styleDesc：艺术风格、渲染质量
+- negativePrompt：不希望出现的元素
 
-motionPrompt 要求：
+图生视频子字段要求（actionDesc/cameraDesc/envChangeDesc/motionSpeedDesc）：
 - 必须用英文
-- 只描述动态元素：主体动作、镜头运镜、环境变化
-- 每个镜头只给 1-2 个核心动作
-- 使用专业镜头语言
+- actionDesc：主体动作，只给 1-2 个核心动作
+- cameraDesc：使用专业镜头语言（dolly, pan, tilt, tracking shot）
+- envChangeDesc：环境动态变化（烟雾、光影变化、物体运动）
+- motionSpeedDesc：运动速率和帧率
+- negativeMotionPrompt：不希望出现的动态效果（变形、闪烁、抖动）
 
 对话要求：
 - characterId 为 null 表示旁白，否则使用角色 ID
@@ -256,24 +269,38 @@ Return strictly in this JSON format, no other text:
         { "characterId": "char_xxx", "text": "Character dialogue", "delivery": "gently" }
       ],
       "scriptText": "Shot narration summary (short, punchy)",
-      "visualPrompt": "Text-to-image prompt (English, must include active characters' full appearance matching character definitions)",
-      "motionPrompt": "Image-to-video prompt (English, dynamic description)",
+      "subjectDesc": "Subject description (English, e.g. A young woman with long dark hair)",
+      "sceneDesc": "Scene/background (English, e.g. sitting in a sunlit cafe by the window)",
+      "detailDesc": "Details/clothing (English, e.g. wearing a white blouse, delicate jewelry)",
+      "lightingDesc": "Lighting/color (English, e.g. warm golden hour light, cinematic rim light)",
+      "styleDesc": "Art style (English, e.g. photorealistic, 8k, ultra-detailed)",
+      "negativePrompt": "Negative prompt (English, e.g. bad anatomy, extra limbs, blurry)",
+      "actionDesc": "Subject action (English, e.g. slowly turns her head and smiles gently)",
+      "cameraDesc": "Camera movement (English, e.g. camera slowly dollies in, close-up tracking shot)",
+      "envChangeDesc": "Environment changes (English, e.g. steam rising from the coffee cup)",
+      "motionSpeedDesc": "Motion speed (English, e.g. cinematic slow-motion, 24fps)",
+      "negativeMotionPrompt": "Negative motion (English, e.g. morphing, flickering, shaky camera)",
       "duration": 5
     }
   ]
 }
 
-visualPrompt requirements:
+Text-to-image sub-fields (subjectDesc/sceneDesc/detailDesc/lightingDesc/styleDesc):
 - Must be in English, comma-separated phrases
-- Must include full appearance descriptions of active characters (consistent with character definitions)
-- Include: subject, scene/background, lighting/color, art style
-- Keep poses natural and stable
+- subjectDesc: must include full appearance of active characters matching character definitions
+- sceneDesc: scene/background with spatial layers
+- detailDesc: clothing, props, details
+- lightingDesc: lighting type, color mood
+- styleDesc: art style, render quality
+- negativePrompt: unwanted elements
 
-motionPrompt requirements:
+Image-to-video sub-fields (actionDesc/cameraDesc/envChangeDesc/motionSpeedDesc):
 - Must be in English
-- Only describe dynamic elements: subject action, camera movement, environment changes
-- 1-2 core actions per shot
-- Use professional camera language
+- actionDesc: 1-2 core actions only
+- cameraDesc: professional camera language (dolly, pan, tilt, tracking shot)
+- envChangeDesc: environmental dynamics
+- motionSpeedDesc: motion speed and frame rate
+- negativeMotionPrompt: unwanted motion effects
 
 Dialogue requirements:
 - characterId null = narrator, otherwise use character ID

@@ -50,9 +50,8 @@ export function ShotCard({
       case "storyboard":
         return shot.scriptText.slice(0, 60) || t("wizard.promptSubject");
       case "image":
-        return shot.imageUrl ? "✅" : shot.visualPrompt.slice(0, 40);
       case "video":
-        return shot.videoUrl ? "✅" : shot.motionPrompt.slice(0, 40);
+        return shot.scriptText.slice(0, 50) || shot.visualPrompt.slice(0, 40);
     }
   })();
 

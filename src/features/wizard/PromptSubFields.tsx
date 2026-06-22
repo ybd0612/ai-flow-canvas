@@ -45,7 +45,7 @@ export function PromptSubFields({
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-violet-400">
             <Image size={11} />
-            {t("wizard.promptSubject").replace("wizard.promptSubject", "文生图")}
+            {t("wizard.sectionImage")}
           </div>
           <PromptField
             label={t("wizard.promptSubject")}
@@ -95,7 +95,7 @@ export function PromptSubFields({
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-400">
             <Video size={11} />
-            {t("wizard.promptAction").replace("wizard.promptAction", "图生视频")}
+            {t("wizard.sectionVideo")}
           </div>
           <PromptField
             label={t("wizard.promptAction")}

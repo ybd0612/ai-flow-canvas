@@ -210,27 +210,46 @@ export function useWizardActions() {
     const tasks = shotsNeedingVideos.map((shot) => async () => {
       if (signal?.aborted) return;
       store.setShotStatus(shot.id, "videoing");
+      store.updateShot(shot.id, { videoProgress: 0 });
 
-      try {
-        const motionPrompt = composeMotionPrompt(shot);
-        const result = await generateVideo(
-          {
-            apiKey: providerConfig.apiKey,
-            baseUrl: providerConfig.baseUrl,
-            prompt: motionPrompt,
-            imageUrl: shot.imageUrl!,
-            size: videoSize,
-            duration: shot.duration,
-          },
-          (progress) => {
-            useProjectStore.getState().updateShot(shot.id, { videoProgress: progress });
-          },
-          signal,
-        );
+      const MAX_TASK_RETRIES = 2;
+      const RETRY_DELAY_MS = 8_000;
 
-        store.updateShot(shot.id, { videoUrl: result.videoUrl, status: "videoed" });
-      } catch (err) {
-        store.setShotStatus(shot.id, "failed", err instanceof Error ? err.message : String(err));
+      for (let attempt = 0; attempt <= MAX_TASK_RETRIES; attempt++) {
+        if (signal?.aborted) return;
+
+        try {
+          const motionPrompt = composeMotionPrompt(shot);
+          const result = await generateVideo(
+            {
+              apiKey: providerConfig.apiKey,
+              baseUrl: providerConfig.baseUrl,
+              prompt: motionPrompt,
+              imageUrl: shot.imageUrl!,
+              size: videoSize,
+              duration: shot.duration,
+            },
+            (progress) => {
+              useProjectStore.getState().updateShot(shot.id, { videoProgress: progress });
+            },
+            signal,
+          );
+
+          store.updateShot(shot.id, { videoUrl: result.videoUrl, status: "videoed" });
+          return; // Success — exit retry loop
+        } catch (err) {
+          const isLastAttempt = attempt >= MAX_TASK_RETRIES;
+          if (isLastAttempt) {
+            store.setShotStatus(shot.id, "failed", err instanceof Error ? err.message : String(err));
+          } else {
+            // Wait before retrying
+            store.updateShot(shot.id, {
+              videoProgress: 0,
+              videoRetryCount: (shot.videoRetryCount ?? 0) + 1,
+            });
+            await new Promise<void>((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
+          }
+        }
       }
     });
 
