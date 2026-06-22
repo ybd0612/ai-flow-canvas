@@ -10,10 +10,26 @@
 import { MODELS } from "@/lib/models";
 
 const VIDEO_POLL_INTERVAL_MS = 5_000;
-const VIDEO_POLL_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes per attempt
+const VIDEO_POLL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes per attempt
 const VIDEO_POLL_MAX_NOT_EXIST_RETRIES = 6; // 最多等待 30 秒让任务注册
 const VIDEO_CREATE_MAX_RETRIES = 3; // 429 rate-limit retry
 const VIDEO_CREATE_BASE_DELAY_MS = 10_000; // 10s base delay for 429 retry
+
+/**
+ * Error thrown when the video task was already created on the server
+ * but polling failed (timeout, error, etc.).
+ * Callers should NOT retry creating a new task when they receive this error.
+ */
+export class VideoTaskCreatedError extends Error {
+  readonly taskCreated = true;
+  readonly videoId: string;
+
+  constructor(message: string, videoId: string) {
+    super(message);
+    this.name = "VideoTaskCreatedError";
+    this.videoId = videoId;
+  }
+}
 
 interface CreateVideoOptions {
   apiKey: string;
@@ -181,15 +197,16 @@ export async function generateVideo(
       if (text.includes("task_not_exist") || pollResp.status === 404) {
         notExistCount++;
         if (notExistCount > VIDEO_POLL_MAX_NOT_EXIST_RETRIES) {
-          throw new Error(
+          throw new VideoTaskCreatedError(
             `视频任务 ${videoId} 持续不存在（已重试 ${notExistCount} 次，HTTP ${pollResp.status}）。` +
             `轮询 URL: ${pollUrl}。响应: ${text.slice(0, 300)}`,
+            videoId,
           );
         }
         continue;
       }
 
-      throw new Error(`Video poll error ${pollResp.status}: ${text.slice(0, 500)}`);
+      throw new VideoTaskCreatedError(`Video poll error ${pollResp.status}: ${text.slice(0, 500)}`, videoId);
     }
 
     // 成功获取响应，重置 not_exist 计数
@@ -198,8 +215,9 @@ export async function generateVideo(
     const pollContentType = pollResp.headers.get("content-type") ?? "";
     if (!pollContentType.includes("application/json")) {
       const text = await pollResp.text().catch(() => "");
-      throw new Error(
+      throw new VideoTaskCreatedError(
         `Video 轮询返回了非 JSON 响应 (Content-Type: ${pollContentType})。响应前 200 字符：${text.slice(0, 200)}`,
+        videoId,
       );
     }
 
@@ -222,11 +240,11 @@ export async function generateVideo(
         : pollJson.error
           ? JSON.stringify(pollJson.error)
           : "unknown error";
-      throw new Error(`视频生成失败: ${errDetail}`);
+      throw new VideoTaskCreatedError(`视频生成失败: ${errDetail}`, videoId);
     }
   }
 
-  if (!videoUrl) throw new Error("视频生成超时。");
+  if (!videoUrl) throw new VideoTaskCreatedError("视频生成超时，任务可能仍在服务器运行。", videoId);
 
   if (!videoUrl.startsWith("http://") && !videoUrl.startsWith("https://")) {
     videoUrl = "https://" + videoUrl;

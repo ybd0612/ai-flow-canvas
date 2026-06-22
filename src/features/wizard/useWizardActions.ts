@@ -8,7 +8,7 @@ import { useProjectStore, selectActiveProject, type Shot } from "@/stores/projec
 import { useSettingsStore } from "@/stores/settingsStore";
 import { generateScript } from "@/services/scriptService";
 import { generateImage, aspectRatioToImageSize } from "@/services/imageService";
-import { generateVideo, aspectRatioToVideoSize } from "@/services/videoService";
+import { generateVideo, aspectRatioToVideoSize, VideoTaskCreatedError } from "@/services/videoService";
 import { injectCharacterDescriptions } from "@/lib/characterUtils";
 import { composeVisualPrompt, composeMotionPrompt } from "@/lib/promptUtils";
 
@@ -238,6 +238,13 @@ export function useWizardActions() {
           store.updateShot(shot.id, { videoUrl: result.videoUrl, status: "videoed" });
           return; // Success — exit retry loop
         } catch (err) {
+          // If the task was already created on the server, do NOT retry
+          // (the server task may still be running — retrying would create duplicate tasks)
+          if (err instanceof VideoTaskCreatedError) {
+            store.setShotStatus(shot.id, "failed", err.message);
+            return;
+          }
+
           const isLastAttempt = attempt >= MAX_TASK_RETRIES;
           if (isLastAttempt) {
             store.setShotStatus(shot.id, "failed", err instanceof Error ? err.message : String(err));
